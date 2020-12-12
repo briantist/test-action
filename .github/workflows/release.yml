@@ -23,4 +23,28 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: echo "VER_TAG=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
 
-      - run: echo $VER_TAG
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build Asset
+        run: zip -j -r gen/project-${VER_TAG}.zip stuff/*
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.VER_TAG }}
+          release_name: v${{ env.VER_TAG }}
+
+      - name: Upload Asset
+        id: upload_asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: gen/project-${VER_TAG}.zip
+          asset_name: project-${VER_TAG}.zip
+          asset_content_type: application/zip
