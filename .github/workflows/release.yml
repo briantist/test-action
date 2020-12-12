@@ -26,6 +26,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Release Notes
+        run: |
+          expected="release_notes/v${VER_TAG}.md"
+          if [ -e "$expected" ]
+          then
+            echo "BODY_PATH=$expected" >> $GITHUB_ENV
+          else
+            generated=gen/v${VER_TAG}.md
+            echo "Release version ${VER_TAG}" > $generated
+            echo "BODY_PATH=$generated" >> $GITHUB_ENV
+          fi
+
       - name: Build Asset
         run: zip -j -r -v gen/project-${VER_TAG}.zip stuff/*
 
@@ -37,6 +49,7 @@ jobs:
         with:
           tag_name: ${{ env.VER_TAG }}
           release_name: v${{ env.VER_TAG }}
+          body_path: ${{ env.BODY_PATH }}
 
       - name: Upload Asset
         id: upload_asset
